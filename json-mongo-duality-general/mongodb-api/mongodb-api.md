@@ -187,7 +187,7 @@ Copy **ONE** of the following *curl* commands and paste it to the command or ter
 
 3. Keep the command or terminal window open for later use. If you close it and need to reopen it, you will need to set the PATH again according to the instructions above.
 
-Mongo Shell is now set up on your PC or Mac.
+MongoDB Shell is now set up on your PC or Mac.
 
 ### 5: Alternatively, you can install MongoDB Compass, the GUI for MongoDB
 
@@ -195,9 +195,9 @@ Mongo Shell is now set up on your PC or Mac.
 
 This step is optional, so it is not described in more detail here, although the installation itself is intuitive and self-describing.
 
-## Task 2: Use Mongo API to interact with Oracle AI Database
+## Task 2: Use MongoDB API to interact with Oracle AI Database
 
-With our JSON Collection and Duality Views created in the Oracle AI Database, we can use Mongo APIs to interact with these collections as if we were interacting with a Mongo Database. In this section, we will use native Mongo tools and connect to the Oracle AI Database with a Mongo connection string -- which was configured as a part of the Oracle REST Data Service (ORDS) configuration. From there, we can interact with Mongo tools or SQL Developer Web interchangeably to access our data.
+With our JSON Collection and Duality Views created in the Oracle AI Database, we can use MongoDB APIs to interact with these collections as if we were interacting with a MongoDB Database. In this section, we will use native MongoDB tools and connect to the Oracle AI Database with a MongoDB connection string -- which was configured as a part of the Oracle REST Data Service (ORDS) configuration. From there, we can interact with MongoDB tools or SQL Developer Web interchangeably to access our data.
 
 ### Objectives
 
@@ -241,10 +241,10 @@ In this section, you will:
 
     Let us look at those with MongoDB tools now.
 
-### Interact with native JSON Collections in the Oracle AI Database using Mongo API
+### Interact with native JSON Collections in the Oracle AI Database using MongoDB API
 
 
-1. First, you must set the URI to the Mongo API running in ORDS on your machine. 
+1. First, you must set the URI to the MongoDB API running in ORDS on your machine. 
 
     **Your Autonomous AI Database should be configured with an enabled MongoDB API, ready for you to go. If you don't see the MongoDB API enabled in your environment, then let's enable it quickly.** 
     
@@ -264,7 +264,7 @@ In this section, you will:
 
     2. If the MongoDB API is successfully enabled, it will show you the URI to copy.
 
-    ![Copy Mongo URI](./images/newmonogoapi.png " ")
+    ![Copy MongoDB URI](./images/newmonogoapi.png " ")
 
     The MongoDB API URI looks like this:
 
@@ -516,7 +516,43 @@ Let's take some time to demonstrate the interactivity between the Oracle and Mon
     ```
 	![Schedules](./images/schedules.png)
 
-That was a quick run-through of using JSON Collections with the MongoDB compatible API in Oracle AI Database. There is obviously more to this - as always - but we hope that it helped you to get started and interested in Oracle's comprehensive JSON capabilities.
+## Task 4: Supporting Flexible JSON APIs: MongoDB API aggregate function
+
+In Task 2, you loaded a denormalized JSON collection, `'movies'` to your Oracle Database. In Lab 3, you leveraged JSON Duality Views to expose your data as normalized relational structures while still supporting flexible JSON APIs. This means you can benefit from data consistency and referential integrity—core "normalized" database benefits—without losing the hierarchically modeling capability of JSON. Oracle Database introduced native support for the MongoDB API aggregate function in Oracle Database 26ai.
+
+1. Use the MongoDB Shell aggregate function. This will return the rank list of actors/actresses with the highest box office gross of movies that have received at least one award.
+
+    ```bash
+    <copy>db.movies.aggregate([
+    // First Stage
+    { $match: {
+       awards: { $exists: true, $ne: [] },
+       gross: { $ne: null }
+    }},
+    { $project: {
+      _id: 0,
+      gross: 1,
+      awards: 1,
+      cast: 1
+}},
+// Second Stage
+{ $unwind: "$cast" },
+// Third Stage
+{ $group: {
+  _id: "$cast",
+  averageGross: { $avg: "$gross" }
+}},
+// Fourth Stage
+{ $sort: { averageGross: -1 } }
+]);
+    </copy>
+    ```
+    ![Terminal aggregate command](./images/terminal-mongosh-aggregate.png)
+
+2. View the results, type `it` for more documents
+![Terminal aggregate command](./images/terminal-aggregate-results.png)
+
+That was a quick run-through of using JSON Collections with the MongoDB compatible API in Oracle AI Database. There is more to this - as always - but we hope that it helped you to get started and interested in Oracle's comprehensive JSON capabilities.
 
 ## Learn More
 
